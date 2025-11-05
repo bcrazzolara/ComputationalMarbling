@@ -8,7 +8,6 @@ of marbling paper art. It supports both Eulerian (grid-based) and Lagrangian
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from scipy.ndimage import map_coordinates
 
 
@@ -342,14 +341,16 @@ class MarblingSimulation:
         
         self.time += self.solver.dt
     
-    def render(self, width=800, height=800, point_size=2):
+    # Rendering parameters
+    PARTICLE_ALPHA = 0.3  # Alpha blending for particle rendering
+    
+    def render(self, width=800, height=800):
         """
         Render the current state as an image.
         
         Args:
             width: Image width in pixels
             height: Image height in pixels
-            point_size: Size of particle points
             
         Returns:
             RGB image array
@@ -365,12 +366,12 @@ class MarblingSimulation:
             x_pixels = np.clip(x_pixels, 0, width - 1)
             y_pixels = np.clip(y_pixels, 0, height - 1)
             
-            # Paint particles (alpha blending for layering effect)
-            for i in range(len(x_pixels)):
-                x, y = x_pixels[i], y_pixels[i]
-                # Simple alpha blending
-                alpha = 0.3
-                image[y, x] = image[y, x] * (1 - alpha) + dye.color * alpha
+            # Paint particles (vectorized alpha blending for layering effect)
+            # Use numpy indexing for better performance
+            image[y_pixels, x_pixels] = (
+                image[y_pixels, x_pixels] * (1 - self.PARTICLE_ALPHA) + 
+                dye.color * self.PARTICLE_ALPHA
+            )
         
         return np.clip(image, 0, 1)
     
